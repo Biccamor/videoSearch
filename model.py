@@ -9,7 +9,7 @@ import torch.nn.functional as F
 class SearchEngine():
 
 
-    def __init__(self, image_dir: str, device: str='cpu'):
+    def __init__(self, image_dir: str='frames', device: str='cpu'):
         self.MODEL_NAME = "google/siglip2-base-patch16-224"
         self.device = device
         self.model = AutoModel.from_pretrained(self.MODEL_NAME, 
@@ -95,3 +95,7 @@ class SearchEngine():
             best_finds.append({"path": path_of_file, "score": top_probs[i]})
 
         return best_finds
+
+    def delete_folder(self):
+        """zrób to pozniej"""
+        ...
