@@ -92,7 +92,7 @@ class SearchEngine():
                 
             path_top_file = self.file_names[idx_act]
             path_of_file = os.path.join(self.image_dir, path_top_file)
-            best_finds.append({"path": path_of_file, "score": top_probs[i]})
+            best_finds.append({"path": path_of_file, "score": 100*top_probs[i]})
 
         return best_finds
 
