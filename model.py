@@ -1,6 +1,6 @@
 import torch
 from PIL import Image
-from transformers import AutoProcessor, AutoModel, AutoTokenizer
+from transformers import AutoProcessor, AutoModel
 import os
 from deep_translator import GoogleTranslator
 import torch.nn.functional as F
@@ -9,7 +9,7 @@ import torch.nn.functional as F
 class SearchEngine():
 
 
-    def __init__(self, image_dir: str='frames', device: str='cpu'):
+    def __init__(self, image_dir: str='data', device: str='cpu'):
         self.MODEL_NAME = "google/siglip2-base-patch16-224"
         self.device = device
         self.model = AutoModel.from_pretrained(self.MODEL_NAME, 

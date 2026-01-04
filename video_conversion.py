@@ -11,23 +11,32 @@ class Conversion():
         self.OUTPUT_DIR = "data"
         self.OUTPUT_DIR_FRAMES = ""
         self.OUTPUT_DIR_AUDIO = ""
-        
+
     def convert_video_to_audio(self, video_file_path: str):
-        """" nie skonczone """
-        command = f"ffmpeg -i {video_file_path} -vn -ar 16000 -ac 1 -acodec -b:a 192k {self.OUTPUT_DIR_AUDIO}"
-        subprocess.call(command, shell=False)
+        file_path = os.path.join(self.OUTPUT_DIR_AUDIO, "audio.wav")
+
+        #whisper openai uses 16000 sample rate, wav file type, and one chanell (mono)
+
+
+        command = [
+            "ffmpeg",
+            "-i", video_file_path, "-vn", "-ar", "16000", "-ac", "1", "-acodec", "pcm_s16le", "-y", file_path
+        ]
+
+        subprocess.run(command, check=True)
 
     def create_directory(self):
 
         path = Path(self.OUTPUT_DIR)
         id_for_dir = str(uuid.uuid4())
         self.OUTPUT_DIR = path / id_for_dir
-        self.OUTPUT_DIR_FRAMES = self.OUTPUT_DIR / "frames"
-        self.OUTPUT_DIR_AUDIO = self.OUTPUT_DIR / "audio"
+        self.OUTPUT_DIR_FRAMES = path / id_for_dir / "frames"
+        self.OUTPUT_DIR_AUDIO = path / id_for_dir  / "audio"
+        print(self.OUTPUT_DIR_AUDIO)
 
         self.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        self.OUTPUT_DIR_AUDIO.mkdir(parents=False, exist_ok=True)
-        self.OUTPUT_DIR_FRAMES.mkdir(parents=False, exist_ok=True)
+        self.OUTPUT_DIR_AUDIO.mkdir(parents=True, exist_ok=True)
+        self.OUTPUT_DIR_FRAMES.mkdir(parents=True, exist_ok=True)
 
     def convert_video_to_photos(self, video_path: str):
         
@@ -53,3 +62,9 @@ class Conversion():
             frames_count+=1
 
         cap.release()
+
+if __name__ == "__main__":
+    c = Conversion()
+
+    c.create_directory()
+    c.convert_video_to_audio('familyguy.mp4')
