@@ -2,7 +2,6 @@ from faster_whisper import WhisperModel, BatchedInferencePipeline
 from transformers import AutoProcessor, AutoModel
 import torch
 from video_conversion import Conversion
-from pathlib import Path
 
 class SearchAudio():
 
