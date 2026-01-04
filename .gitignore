@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.vscode/
+
+data/
+*.mp4
+*.wav
+*.png
+
+tests/
