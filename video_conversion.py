@@ -38,6 +38,13 @@ class Conversion():
         self.OUTPUT_DIR_AUDIO.mkdir(parents=True, exist_ok=True)
         self.OUTPUT_DIR_FRAMES.mkdir(parents=True, exist_ok=True)
 
+    
+    def return_path_frames(self):
+        return self.OUTPUT_DIR_FRAMES
+    
+    def return_path_audio(self):
+        return self.OUTPUT_DIR_AUDIO
+
     def convert_video_to_photos(self, video_path: str):
         
         cap = cv2.VideoCapture(video_path)
@@ -55,7 +62,7 @@ class Conversion():
             if not success: break
 
             if frames_count%(fps//self.frames)==0:
-                save_path = os.path.join(self.OUTPUT_DIR, f'frame_{count}.png')
+                save_path = os.path.join(self.OUTPUT_DIR_FRAMES, f'frame_{count}.png')
                 cv2.imwrite(save_path, frame)
                 count+=1
         

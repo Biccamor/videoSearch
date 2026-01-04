@@ -95,7 +95,3 @@ class SearchEngine():
             best_finds.append({"path": path_of_file, "score": 100*top_probs[i]})
 
         return best_finds
-
-    def delete_folder(self):
-        """zrób to pozniej"""
-        ...
