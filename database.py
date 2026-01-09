@@ -35,7 +35,7 @@ class Database:
         ]
         )
 
-        init_database()
+        self.init_database()
 
     def init_database(self):
 
