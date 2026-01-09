@@ -2,6 +2,7 @@ from faster_whisper import WhisperModel, BatchedInferencePipeline
 from transformers import AutoProcessor, AutoModel
 import torch
 from video_conversion import Conversion
+import re
 
 class SearchAudio():
 
@@ -31,14 +32,21 @@ class SearchAudio():
         return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
     def normalize_length(segment, self):
-        ...
+        if len(segment.text) <= 120 or "." not in segment.text or "?" not in segment.text or "!" not in segment.text: 
+            return segment
+
+        new_segments = []
+
+        length_of_text = len(segment.text)
+
+
 
 
     def transcription(self):
         
         segments = []
 
-        raw_segments, _ = self.batched_model.transcribe(audio=self.audio_file, batch_size=4)
+        raw_segments, _ = self.batched_model.transcribe(audio=self.audio_file, batch_size=4, vad_filter=True)
         for segment in raw_segments:
             segments.append({
                 "start_time": segment.start,

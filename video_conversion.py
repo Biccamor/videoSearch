@@ -11,6 +11,7 @@ class Conversion():
         self.OUTPUT_DIR = "data"
         self.OUTPUT_DIR_FRAMES = ""
         self.OUTPUT_DIR_AUDIO = ""
+        self.frame_data = []
 
     def convert_video_to_audio(self, video_file_path: str):
         file_path = os.path.join(self.OUTPUT_DIR_AUDIO, "audio.wav")
@@ -55,7 +56,8 @@ class Conversion():
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         count = 0
         frames_count=0
-        
+
+
         while True: 
             success, frame = cap.read()
             
@@ -65,6 +67,10 @@ class Conversion():
                 save_path = os.path.join(self.OUTPUT_DIR_FRAMES, f'frame_{count}.png')
                 cv2.imwrite(save_path, frame)
                 count+=1
+                
+                self.frame_data.append({"frame_path": save_path / frame, 
+                                   "timestamp": count,
+                                   "vector": None})
         
             frames_count+=1
 

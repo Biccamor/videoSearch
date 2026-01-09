@@ -1,11 +1,13 @@
 from model import SearchEngine
 from video_conversion import  Conversion
 from hearing_model import SearchAudio
+from database import Database
 
 class App():
 
     def __init__(self):
         self.conversion = Conversion() 
+        self.db = Database()
         self.conversion.create_directory()
         self.audio_directory = self.conversion.return_path_audio()
         self.framed_directory = self.conversion.return_path_frames()
