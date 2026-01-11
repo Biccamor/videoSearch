@@ -3,21 +3,30 @@ import cv2
 import os
 import uuid
 from pathlib import Path
+from PIL import Image
+import torch
+import torch.nn.functional as F
+from database import Database
+from transformers import AutoProcessor, AutoModel
 
 class Conversion():
 
-    def __init__(self, frames: int=1):
+    def __init__(self, frames: int=1, device: str = 'cpu'):
         self.frames = frames
         self.OUTPUT_DIR = "data"
         self.OUTPUT_DIR_FRAMES = ""
         self.OUTPUT_DIR_AUDIO = ""
         self.frame_data = []
+        self.db = Database()
+        self.MODEL_IMAGE_NAME = "google/siglip2-base-patch16-224"
+        self.processor = AutoProcessor.from_pretrained(self.MODEL_IMAGE_NAME, use_fast=True)
+        self.model = AutoModel.from_pretrained(self.MODEL_IMAGE_NAME, dtype=torch.float32, device_map=device,
+                                                 attn_implementation="sdpa")
 
     def convert_video_to_audio(self, video_file_path: str):
         file_path = os.path.join(self.OUTPUT_DIR_AUDIO, "audio.wav")
 
         #whisper openai uses 16000 sample rate, wav file type, and one chanell (mono)
-
 
         command = [
             "ffmpeg",
@@ -25,26 +34,6 @@ class Conversion():
         ]
 
         subprocess.run(command, check=True)
-
-    def create_directory(self):
-
-        path = Path(self.OUTPUT_DIR)
-        id_for_dir = str(uuid.uuid4())
-        self.OUTPUT_DIR = path / id_for_dir
-        self.OUTPUT_DIR_FRAMES = path / id_for_dir / "frames"
-        self.OUTPUT_DIR_AUDIO = path / id_for_dir  / "audio"
-        print(self.OUTPUT_DIR_AUDIO)
-
-        self.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        self.OUTPUT_DIR_AUDIO.mkdir(parents=True, exist_ok=True)
-        self.OUTPUT_DIR_FRAMES.mkdir(parents=True, exist_ok=True)
-
-    
-    def return_path_frames(self):
-        return self.OUTPUT_DIR_FRAMES
-    
-    def return_path_audio(self):
-        return self.OUTPUT_DIR_AUDIO
 
     def convert_video_to_photos(self, video_path: str):
         
@@ -57,27 +46,56 @@ class Conversion():
         count = 0
         frames_count=0
 
+        self.list_images = []
+        self.file_names = []
+        self.image_features = None
 
         while True: 
             success, frame = cap.read()
             
             if not success: break
 
+            frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+
+
             if frames_count%(fps//self.frames)==0:
-                save_path = os.path.join(self.OUTPUT_DIR_FRAMES, f'frame_{count}.png')
-                cv2.imwrite(save_path, frame)
                 count+=1
-                
-                self.frame_data.append({"frame_path": save_path / frame, 
-                                   "timestamp": count,
-                                   "vector": None})
+
+                vector = self.images_to_vectors(frame)
+
+                vector = vector.detach().flatten().tolist()
+
+                self.frame_data.append({
+                    "id": str(uuid.uuid4()),
+                    "video_name": os.path.basename(video_path),
+                    "timestamp": count-1,
+                    "vector": vector,
+                    })
         
             frames_count+=1
 
         cap.release()
 
+
+    def images_to_vectors(self, image) -> torch.Tensor:
+
+        inputs = self.processor(images=image, return_tensors="pt")
+
+        with torch.no_grad():
+            image_features = self.model.get_image_features(**inputs)
+
+        self.image_features = F.normalize(image_features, dim=1, p=2)
+
+        return self.image_features
+
+    def add_db(self):
+
+        frames_db = self.db.return_table(table_name="frames")
+        
+        frames_db.add(self.frame_data)
+        
+
 if __name__ == "__main__":
     c = Conversion()
 
-    c.create_directory()
     c.convert_video_to_audio('familyguy.mp4')

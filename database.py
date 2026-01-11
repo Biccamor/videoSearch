@@ -12,21 +12,20 @@ class Database:
 
         #Tabela dla klatek filmow
 
-        self.frames_schema = pa.Schema(
+        self.frames_schema = pa.schema(
         [
-            pa.field("id", pa.uint16()),
+            pa.field("id", pa.string()),
             pa.field("video_name", pa.string()),
             pa.field("timestamp", pa.float32()),
             pa.field("vector", pa.list_(pa.float32(), 768)),
-            pa.field("path_to_frame", pa.string())
         ]
         )
 
         # Tabela dla audio
 
-        self.audio_schema = pa.Schema(
+        self.audio_schema = pa.schema(
         [
-            pa.field("id", pa.unit64()),
+            pa.field("id", pa.string()),
             pa.field("video_name", pa.string()),
             pa.field("start_time", pa.float32()),
             pa.field("end_time", pa.float32()),

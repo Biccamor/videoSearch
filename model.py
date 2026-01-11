@@ -4,12 +4,12 @@ from transformers import AutoProcessor, AutoModel
 import os
 from deep_translator import GoogleTranslator
 import torch.nn.functional as F
-
+from database import Database
 
 class SearchEngine():
 
 
-    def __init__(self, image_dir: str='data', device: str='cpu'):
+    def __init__(self, device: str='cpu'):
         self.MODEL_NAME = "google/siglip2-base-patch16-224"
         self.device = device
         self.model = AutoModel.from_pretrained(self.MODEL_NAME, 
@@ -17,37 +17,10 @@ class SearchEngine():
                                                  attn_implementation="sdpa")
         self.processor = AutoProcessor.from_pretrained(self.MODEL_NAME, use_fast=True)
         self.translator = GoogleTranslator(source='pl', target="en")
-        self.image_dir = image_dir
+        self.db = Database()
         self.list_images = []
         self.file_names = []
         self.image_features: torch.Tensor = None
-
-    def get_image_features(self): 
-
-        self.list_images = []
-        self.file_names = []
-        self.image_features = None
-
-        images = os.listdir(self.image_dir)
-        for file_path in images:
-            path = os.path.join(self.image_dir, file_path)
-
-            try: 
-                image = Image.open(path)
-                if image.mode != "RGB":
-                    image = image.convert("RGB")
-                inputs = self.processor(images=image, return_tensors="pt")
-
-                with torch.no_grad():
-                    image_features = self.model.get_image_features(**inputs)
-                self.list_images.append(image_features)
-                self.file_names.append(file_path)
-            except Exception as e:
-                print(f"Pominięto {file_path}: {e}")
-
-        vector_images = torch.cat(self.list_images, dim=0)
-
-        self.image_features = F.normalize(vector_images, dim=1, p=2)
 
 
     def get_text_vector(self, text_input: str) -> torch.Tensor:
@@ -70,28 +43,17 @@ class SearchEngine():
     
 
     def find_photo(self, number_of_photos: int, text: str):
+        
+        text_features = self.get_text_vector(text)
+            
+        frames_db = self.db.return_table("frames")
 
-        if self.image_features == None:
-            raise Exception("The function get_image_features should be called first")
+        similarity = (
+            frames_db.search(text_features.detach().cpu().tolist())
+            .select(['video_name', 'timestamp'])
+            .distance_type("cosine")
+            .limit(number_of_photos)
+            .to_pandas()
+        )
 
-        text_features_normalized = self.get_text_vector(text)
-
-        similarity = text_features_normalized @ self.image_features.T
-
-        probs = torch.sigmoid((similarity * self.model.logit_scale.exp()) + self.model.logit_bias)
-
-        score, idx = torch.topk(probs, k=number_of_photos)
-        top_indices = idx[0].tolist()
-        top_probs = score[0].tolist()
-
-        best_finds = []
-
-        for i in range(len(top_indices)):
-            idx_act = top_indices[i]
-            # score_act = top_probs[i] * 100 # Zamiana n
-                
-            path_top_file = self.file_names[idx_act]
-            path_of_file = os.path.join(self.image_dir, path_top_file)
-            best_finds.append({"path": path_of_file, "score": 100*top_probs[i]})
-
-        return best_finds
+        return similarity[['video_name', 'timestamp','_distance']]
