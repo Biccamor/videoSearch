@@ -35,23 +35,22 @@ class Conversion():
 
         subprocess.run(command, check=True)
 
-    def convert_video_to_photos(self, video_path: str):
-        
-        cap = cv2.VideoCapture(video_path)
-
-        if not cap.isOpened():
+    def is_opened_error(self):
+        if not self.cap.isOpened():
             raise Exception("Video not opened")
         
-        fps = int(cap.get(cv2.CAP_PROP_FPS))
+    def convert_video_to_photos(self, video_path: str):
+        
+        self.cap = cv2.VideoCapture(video_path)
+
+        self.is_opened_error()
+        
+        fps = int(self.cap.get(cv2.CAP_PROP_FPS))
         count = 0
         frames_count=0
 
-        self.list_images = []
-        self.file_names = []
-        self.image_features = None
-
         while True: 
-            success, frame = cap.read()
+            success, frame = self.cap.read()
             
             if not success: break
 
@@ -74,7 +73,7 @@ class Conversion():
         
             frames_count+=1
 
-        cap.release()
+        self.cap.release()
 
 
     def images_to_vectors(self, image) -> torch.Tensor:

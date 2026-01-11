@@ -56,4 +56,9 @@ class SearchEngine():
             .to_pandas()
         )
 
+        self.accuracy = 100*similarity['_distance']
+
         return similarity[['video_name', 'timestamp','_distance']]
+    
+    def acc(self):
+        return f"Model is {self.accuracy}% sure that it found the right moment of video by sight"

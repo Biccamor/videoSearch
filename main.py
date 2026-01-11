@@ -1,25 +1,17 @@
 from model import SearchEngine
 from video_conversion import  Conversion
 from hearing_model import SearchAudio
-from database import Database
-
 
 #TODO:
 # zrob normalizacje dlugosci dzwieku w hearing modelu
 # uzyj semantci search by znalezc najbardziej podobny do zapytania wektor
-# polacz database z modelem do szukania obrazu / trzeba wrzucic do video conversion funckej 
-# ktora jest w model.py -> zamienia obraz na wektor inaczej ciezko wrzucic do bazy danych
 # polacz database z modelem do szukania dzwieku / trzeb wrzucic do video conversion zamiane transkrycpji na wektor
-# fastapi ?
-# stworz ui 
+# gui
 
 class App():
 
     def __init__(self):
         self.conversion = Conversion() 
-        # self.conversion.create_directory()
-        # self.audio_directory = self.conversion.return_path_audio()
-        # self.framed_directory = self.conversion.return_path_frames()
         self.search_frame = SearchEngine(device='cpu')
         # self.search_audio = SearchAudio(audio_dir=self.audio_directory)
 
