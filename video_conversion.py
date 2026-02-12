@@ -1,9 +1,6 @@
-import subprocess 
 import cv2
 import os
 import uuid
-from pathlib import Path
-from PIL import Image
 import torch
 import torch.nn.functional as F
 from database import Database
@@ -22,18 +19,6 @@ class Conversion():
         self.processor = AutoProcessor.from_pretrained(self.MODEL_IMAGE_NAME, use_fast=True)
         self.model = AutoModel.from_pretrained(self.MODEL_IMAGE_NAME, dtype=torch.float32, device_map=device,
                                                  attn_implementation="sdpa")
-
-    def convert_video_to_audio(self, video_file_path: str):
-        file_path = os.path.join(self.OUTPUT_DIR_AUDIO, "audio.wav")
-
-        #whisper openai uses 16000 sample rate, wav file type, and one chanell (mono)
-
-        command = [
-            "ffmpeg",
-            "-i", video_file_path, "-vn", "-ar", "16000", "-ac", "1", "-acodec", "pcm_s16le", "-y", file_path
-        ]
-
-        subprocess.run(command, check=True)
 
     def is_opened_error(self):
         if not self.cap.isOpened():
@@ -104,15 +89,6 @@ class Conversion():
         if frames_db.count_rows() == 0:
             frames_db.add(self.frame_data) 
         
-        
-    def add_db_audio(self):
-
-        audio_db = self.db.return_table(table_name="audio")
-
-        if audio_db.count_rows() == 0:
-            audio_db.add(self.audio_data) 
 
 if __name__ == "__main__":
     c = Conversion()
-
-    c.convert_video_to_audio('familyguy.mp4')
