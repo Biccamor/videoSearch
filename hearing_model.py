@@ -24,7 +24,7 @@ class SearchAudio():
         self.text_model = AutoModel.from_pretrained(self.MODEL_NAME)
         self.processor =  AutoProcessor.from_pretrained(self.MODEL_NAME)
 
-        self.MIN_COUNT = 80
+        self.MIN_COUNT = 20
         self.convert_video_to_audio()
 
 
@@ -50,6 +50,8 @@ class SearchAudio():
 
     def normalize_length(self):
         
+        if not self.words_video: return
+
         self.clean_segments = []
         
         count = 0
@@ -67,7 +69,7 @@ class SearchAudio():
             if count >= self.MIN_COUNT:
                 
 
-                if word.word[::-1] == ".":   
+                if word.word.strip().endswith("."):   
 
                     new_segment = {
                         "segment": current_segment,
@@ -100,7 +102,7 @@ class SearchAudio():
         
         for segment in raw_segments:
             if segment.words:
-                self.words_video.append(segment.words)
+                self.words_video.extend(segment.words)
 
         self.normalize_length()
         
