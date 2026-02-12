@@ -12,7 +12,6 @@ class Conversion():
         self.frames = frames
         self.OUTPUT_DIR = "data"
         self.OUTPUT_DIR_FRAMES = ""
-        self.OUTPUT_DIR_AUDIO = ""
         self.frame_data = []
         self.db = Database()
         self.MODEL_IMAGE_NAME = "google/siglip2-base-patch16-224"

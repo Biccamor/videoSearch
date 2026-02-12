@@ -1,8 +1,8 @@
 from faster_whisper import WhisperModel, BatchedInferencePipeline
-from transformers import AutoProcessor, AutoModel
-import torch
+from sentence_transformers import SentenceTransformers
 import os
 import subprocess
+import uuid
 
 class SearchAudio():
 
@@ -19,13 +19,11 @@ class SearchAudio():
         
         self.model = WhisperModel('medium', device=self.device, compute_type=self.compute_type)
         self.batched_model = BatchedInferencePipeline(model=self.model)
-        
-        self.MODEL_NAME = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
-        self.text_model = AutoModel.from_pretrained(self.MODEL_NAME)
-        self.processor =  AutoProcessor.from_pretrained(self.MODEL_NAME)
+        self.text_model = SentenceTransformers("all-MiniLM-L6-v2")
 
         self.MIN_COUNT = 20
         self.convert_video_to_audio()
+        self.audio_data = []
 
 
     def convert_video_to_audio(self):
@@ -40,13 +38,6 @@ class SearchAudio():
             ]
 
             subprocess.run(command, check=True, capture_output=True)
-
-    #code from https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
-    def mean_pooling(model_output, attention_mask):
-        token_embeddings = model_output[0]
-        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-
 
     def normalize_length(self):
         
@@ -72,7 +63,7 @@ class SearchAudio():
                 if word.word.strip().endswith("."):   
 
                     new_segment = {
-                        "segment": current_segment,
+                        "text": current_segment,
                         "start": current_start, 
                         "end": word.end
                     }
@@ -87,7 +78,7 @@ class SearchAudio():
         if current_segment != "":
 
             new_segment = {
-            "segment": current_segment,
+            "text": current_segment,
             "start": current_start, 
             "end": word.end
             }
@@ -106,13 +97,30 @@ class SearchAudio():
 
         self.normalize_length()
         
-        # for segment in raw_segments:
-        #     segments.append({
-        #         "start_time": segment.start,
-        #         "end_time": segment.end,
-        #         "text": segment.text
-        #     })
+    
+    def text_2_vectors(self):
 
+        for segment in self.clean_segments: 
+            
+            embeddings = self.text_model.encode(self.segment["text"])
+
+
+            self.audio_data.append({
+                "id": str(uuid.uuid4),
+                "video_name": os.path.basename(),
+                "text": segment["text"],
+                "start": segment["start"],
+                "end": segment["end"],
+                "vector": embeddings                
+            })
+
+    def add_2_db(self):
+        
+        audio_db = self.db.return_table(table_name="audio")
+
+        if audio_db.count_rows() == 0:
+            audio_db.add(self.audio_data) 
+        
 
     
 if __name__ == "__main__":

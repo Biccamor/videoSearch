@@ -3,7 +3,6 @@ from video_conversion import  Conversion
 from hearing_model import SearchAudio
 
 #TODO:
-# zrob normalizacje dlugosci dzwieku w hearing modelu
 # uzyj semantci search by znalezc najbardziej podobny do zapytania wektor
 # polacz database z modelem do szukania dzwieku / trzeb wrzucic do video conversion zamiane transkrycpji na wektor
 # gui
