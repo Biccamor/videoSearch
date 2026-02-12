@@ -7,6 +7,7 @@ from hearing_model import SearchAudio
 # uzyj semantci search by znalezc najbardziej podobny do zapytania wektor
 # polacz database z modelem do szukania dzwieku / trzeb wrzucic do video conversion zamiane transkrycpji na wektor
 # gui
+# dekompozycja convert_video_to_photos w video_conversion.py
 
 class App():
 
@@ -24,7 +25,7 @@ class App():
 
     def run(self):
         
-        self.conversion.add_db()
+        self.conversion.add_db_frames()
         # self.search_audio.transcription()
 
         while True:

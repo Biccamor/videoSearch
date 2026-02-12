@@ -38,14 +38,10 @@ class Database:
 
     def init_database(self):
 
-        if "frames" in self.db.table_names():
-            self.db.open_table("frames")
-        else:        
+        if "frames" not in self.db.table_names():
             self.db.create_table(name="frames", schema=self.frames_schema)
 
-        if "audio" in self.db.table_names():
-            self.db.open_table("audio")
-        else:
+        if "audio" not in self.db.table_names():
             self.db.create_table(name="audio", schema=self.audio_schema)
 
     def return_table(self, table_name):
@@ -56,3 +52,9 @@ class Database:
 
     def return_path(self):
         return self.db_path
+        
+    def is_frames_new(self) -> bool:
+        return self.is_frames_created
+
+    def is_audio_new(self) -> bool:
+        return self.is_audio_created

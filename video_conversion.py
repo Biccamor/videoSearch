@@ -40,7 +40,7 @@ class Conversion():
             raise Exception("Video not opened")
         
     def convert_video_to_photos(self, video_path: str):
-        
+
         self.cap = cv2.VideoCapture(video_path)
 
         self.is_opened_error()
@@ -57,6 +57,7 @@ class Conversion():
             frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
 
 
+            # bierzemy tyle klatek na sekunde ile rowna sie self.frames
             if frames_count%(fps//self.frames)==0:
                 count+=1
 
@@ -76,7 +77,16 @@ class Conversion():
         self.cap.release()
 
 
-    def images_to_vectors(self, image) -> torch.Tensor:
+    def images_to_vectors(self, image: cv2.typing.MatLike) -> torch.Tensor:
+        """
+        Funckja images_to_vectors zamienia zdjęcia na vektory i normalizuje je 
+            zeby byly lista
+                
+        :param image: zdjęcia (klatki filmu) skonwertowane przez cv2
+        :return: zwraca zamienione zdjęcia na vectory, funckja jest używana
+            w funkcji convert_video_to_photos
+        :rtype: Tensor
+        """
 
         inputs = self.processor(images=image, return_tensors="pt")
 
@@ -87,12 +97,20 @@ class Conversion():
 
         return self.image_features
 
-    def add_db(self):
+    def add_db_frames(self):
 
         frames_db = self.db.return_table(table_name="frames")
+
+        if frames_db.count_rows() == 0:
+            frames_db.add(self.frame_data) 
         
-        frames_db.add(self.frame_data)
         
+    def add_db_audio(self):
+
+        audio_db = self.db.return_table(table_name="audio")
+
+        if audio_db.count_rows() == 0:
+            audio_db.add(self.audio_data) 
 
 if __name__ == "__main__":
     c = Conversion()
