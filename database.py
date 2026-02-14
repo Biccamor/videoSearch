@@ -29,8 +29,9 @@ class Database:
             pa.field("video_name", pa.string()),
             pa.field("start_time", pa.float32()),
             pa.field("end_time", pa.float32()),
+            pa.field("timestamp", pa.float32()),
             pa.field("text", pa.string()),
-            pa.field("vector", pa.list_(pa.float32(), ))
+            pa.field("vector", pa.list_(pa.float32(), 384))
         ]
         )
 

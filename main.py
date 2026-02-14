@@ -3,8 +3,6 @@ from video_conversion import  Conversion
 from hearing_model import SearchAudio
 
 #TODO:
-# uzyj semantci search by znalezc najbardziej podobny do zapytania wektor
-# polacz database z modelem do szukania dzwieku / trzeb wrzucic do video conversion zamiane transkrycpji na wektor
 # gui
 # dekompozycja convert_video_to_photos w video_conversion.py
 
@@ -13,18 +11,20 @@ class App():
     def __init__(self):
         self.conversion = Conversion() 
         self.search_frame = SearchEngine(device='cpu')
-        # self.search_audio = SearchAudio(audio_dir=self.audio_directory)
+        self.file = "familyguy.mp4"
+
+        self.search_audio = SearchAudio(file_dir=self.file)
 
     def get_file(self):
         
         # self.file = input("Wpisz nazwe pliku wideo do wczytania: \n")
-        self.file = "familyguy.mp4"
         self.conversion.convert_video_to_photos(self.file)
-        # self.conversion.convert_video_to_audio(self.file)
+        self.search_audio.text_2_vectors()
 
     def run(self):
         
         self.conversion.add_db_frames()
+        self.search_audio.add_2_db()
         # self.search_audio.transcription()
 
         while True:
@@ -33,7 +33,7 @@ class App():
              if user_input == 'q':
                  break
 
-             found = self.search_frame.find_photo(number_of_photos=3, text=user_input)
+             found = self.search_frame.find_photo(number_of_photos=3, text=user_input, table="audio")
              print(found)
 
 

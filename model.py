@@ -42,14 +42,14 @@ class SearchEngine():
         return text_features_normalized
     
 
-    def find_photo(self, number_of_photos: int, text: str):
+    def find_photo(self, number_of_photos: int, text: str, table: str):
         
         text_features = self.get_text_vector(text)
             
-        frames_db = self.db.return_table("frames")
+        db = self.db.return_table(table)
 
         similarity = (
-            frames_db.search(text_features.detach().cpu().tolist())
+            db.search(text_features.detach().cpu().tolist())
             .select(['video_name', 'timestamp'])
             .distance_type("cosine")
             .limit(number_of_photos)

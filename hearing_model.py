@@ -1,8 +1,10 @@
 from faster_whisper import WhisperModel, BatchedInferencePipeline
-from sentence_transformers import SentenceTransformers
+from sentence_transformers import SentenceTransformer
 import os
 import subprocess
 import uuid
+from model import SearchEngine
+from database import Database
 
 class SearchAudio():
 
@@ -19,11 +21,12 @@ class SearchAudio():
         
         self.model = WhisperModel('medium', device=self.device, compute_type=self.compute_type)
         self.batched_model = BatchedInferencePipeline(model=self.model)
-        self.text_model = SentenceTransformers("all-MiniLM-L6-v2")
+        self.text_model = SentenceTransformer("all-MiniLM-L6-v2")
 
         self.MIN_COUNT = 20
         self.convert_video_to_audio()
         self.audio_data = []
+        self.db = Database()
 
 
     def convert_video_to_audio(self):
@@ -99,21 +102,23 @@ class SearchAudio():
         
     
     def text_2_vectors(self):
+        
+        self.transcription()
 
         for segment in self.clean_segments: 
             
-            embeddings = self.text_model.encode(self.segment["text"])
+            embeddings = self.text_model.encode(segment["text"])
 
 
             self.audio_data.append({
                 "id": str(uuid.uuid4),
-                "video_name": os.path.basename(),
-                "text": segment["text"],
-                "start": segment["start"],
-                "end": segment["end"],
+                "video_name": os.path.basename(self.file_dir),
+                "start_time": segment["start"]-1,
+                "end_time": segment["end"],
+                "text": segment["text"],                
                 "vector": embeddings                
-            })
-
+            }) 
+    
     def add_2_db(self):
         
         audio_db = self.db.return_table(table_name="audio")
@@ -126,5 +131,4 @@ class SearchAudio():
 if __name__ == "__main__":
 
     search = SearchAudio("familyguy.mp4")
-    search.transcription()
-    print(search.clean_segments)
+    search.text_2_vectors()
