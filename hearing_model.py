@@ -3,7 +3,7 @@ from sentence_transformers import SentenceTransformer
 import os
 import subprocess
 import uuid
-from model import SearchEngine
+import numpy as np
 from database import Database
 
 class SearchAudio():
@@ -23,7 +23,7 @@ class SearchAudio():
         self.batched_model = BatchedInferencePipeline(model=self.model)
         self.text_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-        self.MIN_COUNT = 20
+        self.MIN_COUNT = 15
         self.convert_video_to_audio()
         self.audio_data = []
         self.db = Database()
@@ -116,7 +116,7 @@ class SearchAudio():
                 "start_time": segment["start"]-1,
                 "end_time": segment["end"],
                 "text": segment["text"],                
-                "vector": embeddings.tolist()                
+                "vector": embeddings.flatten().tolist()              
             }) 
 
     def find(self, number_of_moments: int, text: str):
@@ -126,7 +126,7 @@ class SearchAudio():
         db = self.db.return_table("audio")
 
         similarity = (
-            db.search(text_features.tolist(), vector_column_name='vector')
+            db.search(text_features.flatten().astype(np.float32).tolist())
             .select(['video_name', 'start_time', 'end_time'])
             .metric("cosine")
             .limit(number_of_moments)
@@ -142,7 +142,9 @@ class SearchAudio():
         audio_db = self.db.return_table(table_name="audio")
 
         if audio_db.count_rows() == 0:
-            audio_db.add(self.audio_data) 
+            audio_db.add(self.audio_data)
+
+        # print(audio_db.count_rows()) 
         
 
     

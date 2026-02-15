@@ -30,7 +30,7 @@ class Database:
             pa.field("start_time", pa.float32()),
             pa.field("end_time", pa.float32()),
             pa.field("text", pa.string()),
-            pa.field("vector", pa.list_(pa.float32(), 384))
+            pa.field("vector", pa.list_(pa.float32(), 384)),
         ]
         )
 
@@ -43,6 +43,10 @@ class Database:
 
         if "audio" not in self.db.table_names():
             self.db.create_table(name="audio", schema=self.audio_schema)
+    
+        self.db.create_table(name="frames", schema=self.frames_schema, mode="overwrite")
+
+        self.db.create_table(name="audio", schema=self.audio_schema, mode="overwrite")
 
     def return_table(self, table_name):
         return self.db.open_table(name=table_name)
@@ -58,3 +62,13 @@ class Database:
 
     def is_audio_new(self) -> bool:
         return self.is_audio_created
+
+
+if __name__ == "__main__":
+    db = Database().return_db()
+    print(db.table_names())
+    tbl = db.open_table(name="audio")
+    print(tbl.schema)
+
+    tbl_frames = db.open_table(name="frames")
+    print(tbl_frames.schema)
