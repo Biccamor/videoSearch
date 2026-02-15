@@ -29,7 +29,6 @@ class Database:
             pa.field("video_name", pa.string()),
             pa.field("start_time", pa.float32()),
             pa.field("end_time", pa.float32()),
-            pa.field("timestamp", pa.float32()),
             pa.field("text", pa.string()),
             pa.field("vector", pa.list_(pa.float32(), 384))
         ]
@@ -48,10 +47,10 @@ class Database:
     def return_table(self, table_name):
         return self.db.open_table(name=table_name)
 
-    def return_db(self):
+    def return_db(self) -> lancedb.DBConnection:
         return self.db
 
-    def return_path(self):
+    def return_path(self) -> str:
         return self.db_path
         
     def is_frames_new(self) -> bool:

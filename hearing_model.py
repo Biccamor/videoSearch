@@ -108,17 +108,35 @@ class SearchAudio():
         for segment in self.clean_segments: 
             
             embeddings = self.text_model.encode(segment["text"])
-
+            print(embeddings.shape)
 
             self.audio_data.append({
-                "id": str(uuid.uuid4),
+                "id": str(uuid.uuid4()),
                 "video_name": os.path.basename(self.file_dir),
                 "start_time": segment["start"]-1,
                 "end_time": segment["end"],
                 "text": segment["text"],                
-                "vector": embeddings                
+                "vector": embeddings.tolist()                
             }) 
+
+    def find(self, number_of_moments: int, text: str):
+        
+        text_features = self.text_model.encode(text)
     
+        db = self.db.return_table("audio")
+
+        similarity = (
+            db.search(text_features.tolist(), vector_column_name='vector')
+            .select(['video_name', 'start_time', 'end_time'])
+            .metric("cosine")
+            .limit(number_of_moments)
+            .to_pandas()
+        )
+
+        self.accuracy = (100*(1-similarity['_distance']))
+
+        return similarity[['video_name', 'start_time', 'end_time', '_distance']]
+
     def add_2_db(self):
         
         audio_db = self.db.return_table(table_name="audio")

@@ -25,7 +25,6 @@ class App():
         
         self.conversion.add_db_frames()
         self.search_audio.add_2_db()
-        # self.search_audio.transcription()
 
         while True:
             
@@ -33,7 +32,7 @@ class App():
              if user_input == 'q':
                  break
 
-             found = self.search_frame.find_photo(number_of_photos=3, text=user_input, table="audio")
+             found = self.search_audio.find(3,user_input)
              print(found)
 
 
