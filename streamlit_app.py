@@ -5,6 +5,7 @@ from engines.hearing_model import SearchAudio
 import filetype 
 import os
 import time 
+from database import Database
 
 
 def load_video() -> st.UploadedFile | None:
@@ -36,14 +37,38 @@ def main():
     else:
         mode_selection(path=st.session_state['path'])
 
-def init():
-    
+
+def init_frames(file, path):
+
+    db = Database()
+
+    frame = db.return_table(table_name="frames")
+    check = frame.search().where(f"video_name ='{file}'").limit(1).to_list()
+
+    if len(check)==0:
+        conversion = Conversion()
+        conversion.convert_video_to_photos(path)
+        conversion.add_db_frames()
+        conversion = None 
+
+def init_auido(file, path):
+
+    db = Database()
+
+    audio = db.return_table(table_name="audio")
+    check = audio.search().where(f"video_name = '{file}'").limit(1).to_list()
+
+    if len(check) == 0:
+        search_audio = SearchAudio(path)
+        search_audio.text_2_vectors()
+        search_audio.add_2_db()
 
 
 def mode_selection(path):
 
     search_frame = SearchEngine()
     search_audio = SearchAudio(file_dir = path)
+
 
     mode = st.selectbox("Select which mode would you like to use"
         ("1. Search by image", "2. Search by audio", "3. Search using both", "4. Load another video"))
