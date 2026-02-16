@@ -1,6 +1,6 @@
-from model import SearchEngine
-from video_conversion import  Conversion
-from hearing_model import SearchAudio
+from engines.model import SearchEngine
+from engines.video_conversion import  Conversion
+from engines.hearing_model import SearchAudio
 from database import Database
 
 
@@ -22,9 +22,10 @@ class App():
     def get_file(self):
         
         # self.file = input("Wpisz nazwe pliku wideo do wczytania: \n")
-        frame = Database.return_table(table_name="frames")
+        db = Database()
+        frame = db.return_table(table_name="frames")
 
-        check = frame.search().where(f"filename ='{self.file}'").limit(1).to_list()
+        check = frame.search().where(f"video_name ='{self.file}'").limit(1).to_list()
 
         if len(check)==0: 
             self.conversion.convert_video_to_photos(self.file)
@@ -68,5 +69,5 @@ class App():
 
 if __name__ == "__main__":
     app = App()
-
+    app.get_file()
     app.run()

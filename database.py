@@ -5,8 +5,7 @@ import os
 class Database:
 
     def __init__(self):
-        self.home_dir = os.path.expanduser("~")
-        self.db_path = os.path.join(self.home_dir, "videoSearch", "data")
+        self.db_path = os.path.join(os.getcwd(), "data")
         os.makedirs(self.db_path, exist_ok=True)
         self.db = lancedb.connect(self.db_path)
 
