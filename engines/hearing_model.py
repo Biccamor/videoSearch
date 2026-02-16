@@ -124,9 +124,9 @@ class SearchAudio():
         text_features = self.text_model.encode(text)
     
         db = self.db.return_table("audio")
-
+        query = text_features.flatten().astype(np.float32).tolist()
         similarity = (
-            db.search(text_features.flatten().astype(np.float32).tolist())
+            db.search(query)
             .select(['video_name', 'start_time', 'end_time'])
             .metric("cosine")
             .limit(number_of_moments)

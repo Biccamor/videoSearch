@@ -1,11 +1,13 @@
 from model import SearchEngine
 from video_conversion import  Conversion
 from hearing_model import SearchAudio
-import gc
+from database import Database
 
 
 #TODO:
-# gui
+# streamlit
+# batching w video_conversion
+# czyszczenie modeli
 # dekompozycja convert_video_to_photos w video_conversion.py
 
 class App():
@@ -20,8 +22,14 @@ class App():
     def get_file(self):
         
         # self.file = input("Wpisz nazwe pliku wideo do wczytania: \n")
-        self.conversion.convert_video_to_photos(self.file)
-        self.search_audio.text_2_vectors()
+        frame = Database.return_table(table_name="frames")
+
+        check = frame.search().where(f"filename ='{self.file}'").limit(1).to_list()
+
+        if len(check)==0: 
+            self.conversion.convert_video_to_photos(self.file)
+            self.search_audio.text_2_vectors()
+
 
     def run(self):
         
@@ -29,8 +37,10 @@ class App():
         self.search_audio.add_2_db()
 
         while True:
+             print("------------------------------------------------------------------------------------\n")
              print("W jakim trybie chcesz użyć wyszukiwarki? \n1. Szukanie po obrazach \n2. Szukanie po dźwięku " \
-                "\n 3. Oba tryby \n4. Wyjście")
+                "\n3. Oba tryby \n4. Wyjście")
+             print("------------------------------------------------------------------------------------\n")
              mode = input("Wpisz numer trybu: \n")
              if mode == "4" or mode not in ["1", "2", "3"]:
                  break

@@ -44,11 +44,11 @@ class Database:
         if "audio" not in self.db.table_names():
             self.db.create_table(name="audio", schema=self.audio_schema)
     
-        self.db.create_table(name="frames", schema=self.frames_schema, mode="overwrite")
+        # self.db.create_table(name="frames", schema=self.frames_schema, mode="overwrite")
 
-        self.db.create_table(name="audio", schema=self.audio_schema, mode="overwrite")
+        # self.db.create_table(name="audio", schema=self.audio_schema, mode="overwrite")
 
-    def return_table(self, table_name):
+    def return_table(self, table_name: str):
         return self.db.open_table(name=table_name)
 
     def return_db(self) -> lancedb.DBConnection:

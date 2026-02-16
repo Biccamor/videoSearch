@@ -10,8 +10,6 @@ class Conversion():
 
     def __init__(self, frames: int=1, device: str = 'cpu'):
         self.frames = frames
-        self.OUTPUT_DIR = "data"
-        self.OUTPUT_DIR_FRAMES = ""
         self.frame_data = []
         self.db = Database()
         self.MODEL_IMAGE_NAME = "google/siglip2-base-patch16-224"
@@ -26,9 +24,7 @@ class Conversion():
     def convert_video_to_photos(self, video_path: str):
 
         self.cap = cv2.VideoCapture(video_path)
-
         self.is_opened_error()
-        
         fps = int(self.cap.get(cv2.CAP_PROP_FPS))
         count = 0
         frames_count=0
@@ -39,7 +35,6 @@ class Conversion():
             if not success: break
 
             frame = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-
 
             # bierzemy tyle klatek na sekunde ile rowna sie self.frames
             if frames_count%(fps//self.frames)==0:
