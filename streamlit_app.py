@@ -1,6 +1,6 @@
 import streamlit as st
 from engines.model import SearchEngine
-from engines.video_conversion import  Conversion
+from engines.video_conversion import Conversion
 from engines.hearing_model import SearchAudio
 import filetype 
 import os
@@ -28,11 +28,13 @@ def check_mp4(file) -> bool:
     return False
 
 
+def save_video(file):
+    ...
 
 def main():
 
     if 'init' not in st.session_state:
-        st.session_state['init'] = None
+        st.session_state['init'] = False
 
     if 'video' not in st.session_state:
         st.session_state['video'] = None
@@ -56,42 +58,62 @@ def main():
             st.rerun()
 
     else:
-        init_audio(file=st.session_state['video'], path=st.session_state['path'])
-        init_frames(file=st.session_state['frames'], path=st.session_state['path'])
+        
+        if st.session_state['init'] == False:
+
+            init_audio(file=st.session_state['video'], path=st.session_state['path'])
+            init_frames(file=st.session_state['video'], path=st.session_state['path'])
+            st.session_state['init'] = True
 
         mode_selection(file=st.session_state['video'], path=st.session_state['path'])
 
 
 def init_frames(file, path):
-
-    db = Database()
+    
+    db = get_database()
 
     frame = db.return_table(table_name="frames")
     check = frame.search().where(f"video_name ='{file}'").limit(1).to_list()
 
     if len(check)==0:
         with st.spinner("Conversion video to frames"):
-            conversion = Conversion()
+            conversion = get_conversion()
             conversion.convert_video_to_photos(path)
             conversion.add_db_frames()
 
 def init_audio(file, path):
 
-    db = Database()
+    db = get_database()
 
     audio = db.return_table(table_name="audio")
     check = audio.search().where(f"video_name = '{file}'").limit(1).to_list()
 
     if len(check) == 0:
         with st.spinner("Conversion video to transcript audio"):
-            search_audio = SearchAudio(path)
+            search_audio = get_audio_engine(path=path)
             search_audio.text_2_vectors()
             search_audio.add_2_db()
 
+@st.cache_resource
+def get_search_engine():
+    return SearchEngine()
+
+@st.cache_resource
+def get_database():
+    return Database()
+
+@st.cache_resource
+def get_conversion():
+    return Conversion()
+
+@st.cache_resource(max_entries=1)   # jezeli uzytknowik zaladuje nowy film to stary jest wyrzucony z ramu
+def get_audio_engine(path):
+    return SearchAudio(file_dir=path)
 
 def mode_selection(file, path):
-    search_frame = SearchEngine()
-    search_audio = SearchAudio(file_dir = path)
+
+    search_frame = get_search_engine()
+    search_audio = get_audio_engine(path=path)
 
 
     mode = st.selectbox("Select which mode would you like to use",
@@ -100,7 +122,9 @@ def mode_selection(file, path):
     mode_number = mode[0]
 
     if mode_number == '4':
-        st.session_state['video_name'] = None
+        st.session_state['video'] = None
+        st.session_state['init'] = None
+        st.session_state['path'] = None
         st.rerun()
                 
     user_input = st.text_input("Napisz czego szukasz dokladnie w filmie przesłanym przykładowe zapytanie: żeby wyjśc kliknij q: " )
@@ -111,11 +135,14 @@ def mode_selection(file, path):
     if mode_number == "1":
         found = search_frame.find_photo(1, user_input)
         timestamp = found['timestamp']
+        st.video(data=path, start_time=timestamp)
 
     elif mode_number == "2":
         found = search_audio.find(1, user_input)
         start_time = found['start_time']
         end_time = found['end_time']
+        st.video(data=path, start_time=start_time)
+
 
     # elif mode_number == "3":
     #     found_frames = search_frame.find_photo(1, user_input)
