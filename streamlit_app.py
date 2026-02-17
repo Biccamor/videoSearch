@@ -8,34 +8,58 @@ import time
 from database import Database
 
 
-def load_video() -> st.UploadedFile | None:
+def load_video():
     
     st.header("Load video")
     file = st.file_uploader("Choose mp4 file", type=['mp4'])
     return file
 
-def check_mp4(file):
+def check_mp4(file) -> bool:
+
     bytes_data = file.read(2048)
     check = filetype.guess(bytes_data)
+    file.seek(0)
+    if check is None:
+        return False
     
-    while check.mime is not "audio/mp4":
-        st.write("Wrong extension")
-        time.sleep(3)
-        load_video()
+    if check.mime == 'video/mp4': 
+        return True
+
+    return False
+
+
 
 def main():
+
+    if 'init' not in st.session_state:
+        st.session_state['init'] = None
+
+    if 'video' not in st.session_state:
+        st.session_state['video'] = None
+
+    if 'path' not in st.session_state:
+        st.session_state['path'] = None
+        
+    st.title("Video Search")
 
     if st.session_state['video'] is None:
 
         file = load_video()
-        check_mp4(file)
+        if file is not None:
+            if check_mp4(file) == False:
+                st.write("File is not mp4 extension, please upload file .mp4")
+                time.sleep(3)
+                st.rerun()
 
-        st.session_state['video'] = file
-        st.session_state['path'] = os.path.abspath(file)
-        st.rerun()
+            st.session_state['video'] = file
+            st.session_state['path'] = os.path.abspath(file)
+            st.rerun()
 
     else:
-        mode_selection(path=st.session_state['path'])
+        init_audio(file=st.session_state['video'], path=st.session_state['path'])
+        init_frames(file=st.session_state['frames'], path=st.session_state['path'])
+
+        mode_selection(file=st.session_state['video'], path=st.session_state['path'])
 
 
 def init_frames(file, path):
@@ -46,12 +70,12 @@ def init_frames(file, path):
     check = frame.search().where(f"video_name ='{file}'").limit(1).to_list()
 
     if len(check)==0:
-        conversion = Conversion()
-        conversion.convert_video_to_photos(path)
-        conversion.add_db_frames()
-        conversion = None 
+        with st.spinner("Conversion video to frames"):
+            conversion = Conversion()
+            conversion.convert_video_to_photos(path)
+            conversion.add_db_frames()
 
-def init_auido(file, path):
+def init_audio(file, path):
 
     db = Database()
 
@@ -59,23 +83,25 @@ def init_auido(file, path):
     check = audio.search().where(f"video_name = '{file}'").limit(1).to_list()
 
     if len(check) == 0:
-        search_audio = SearchAudio(path)
-        search_audio.text_2_vectors()
-        search_audio.add_2_db()
+        with st.spinner("Conversion video to transcript audio"):
+            search_audio = SearchAudio(path)
+            search_audio.text_2_vectors()
+            search_audio.add_2_db()
 
 
-def mode_selection(path):
-
+def mode_selection(file, path):
     search_frame = SearchEngine()
     search_audio = SearchAudio(file_dir = path)
 
 
-    mode = st.selectbox("Select which mode would you like to use"
+    mode = st.selectbox("Select which mode would you like to use",
         ("1. Search by image", "2. Search by audio", "3. Search using both", "4. Load another video"))
 
     mode_number = mode[0]
 
-    # Pobieramy dane z pamięci
+    if mode_number == '4':
+        st.session_state['video_name'] = None
+        st.rerun()
                 
     user_input = st.text_input("Napisz czego szukasz dokladnie w filmie przesłanym przykładowe zapytanie: żeby wyjśc kliknij q: " )
 
@@ -84,22 +110,21 @@ def mode_selection(path):
 
     if mode_number == "1":
         found = search_frame.find_photo(1, user_input)
-        print(found)
+        timestamp = found['timestamp']
 
     elif mode_number == "2":
         found = search_audio.find(1, user_input)
-        print(found)
+        start_time = found['start_time']
+        end_time = found['end_time']
 
-    elif mode_number == "3":
-        found_frames = search_frame.find_photo(1, user_input)
-        print("Wyniki wyszukiwania po obrazach: \n", found_frames)
+    # elif mode_number == "3":
+    #     found_frames = search_frame.find_photo(1, user_input)
+    #     timestamp = found['timestamp']
 
-        found_audio = search_audio.find(1, user_input)
-        print("Wyniki wyszukiwania po dźwięku: \n", found_audio)
-
-    
-
+    #     found_audio = search_audio.find(1, user_input)
+    #     start_time = found['start_time']
+    #     end_time = found['end_time']
 
 
 if __name__=="__main__":
-    st.title("Video Search")
+    main()

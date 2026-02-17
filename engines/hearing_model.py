@@ -135,6 +135,10 @@ class SearchAudio():
 
         self.accuracy = (100*(1-similarity['_distance']))
 
+        if number_of_moments == 1:
+            
+            return similarity[['start_time'], ['end_time']]
+
         return similarity[['video_name', 'start_time', 'end_time', '_distance']]
 
     def add_2_db(self):
