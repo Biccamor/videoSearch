@@ -6,15 +6,31 @@ import filetype
 import os
 import time 
 from database import Database
+import shutil
 
+TEMP_DIR = "temp_videos"
 
 def load_video():
+
+    """
+    Function for loading video (mp4)
+
+    Return: returns st.UploadedFile (file that users upload)
+    """
     
     st.header("Load video")
     file = st.file_uploader("Choose mp4 file", type=['mp4'])
     return file
 
 def check_mp4(file) -> bool:
+
+    """
+    checking if file is mp4 with mime types
+    
+    :param file: st.UploadedFile
+    :return: bool: True if file is really mp4, false if not
+    :rtype: bool
+    """
 
     bytes_data = file.read(2048)
     check = filetype.guess(bytes_data)
@@ -28,11 +44,31 @@ def check_mp4(file) -> bool:
     return False
 
 
-def save_video(file):
-    ...
+def save_video(uploaded_file):
+    
+    if not os.path.exists(TEMP_DIR):
+        os.mkdir(TEMP_DIR)
+
+    for filename in os.listdir(TEMP_DIR):
+        filepath = os.path.join(TEMP_DIR, filename.name)
+        
+        try:
+            if filepath is not None:
+                os.remove(filepath)
+        except Exception as e:
+            return e
+
+
+    path = os.path.join(TEMP_DIR, uploaded_file.name)
+    with open(path, 'wb') as file: 
+        shutil.copyfileobj(uploaded_file,file)
+
+    return path
+
 
 def main():
-
+    
+    # create all session_states
     if 'init' not in st.session_state:
         st.session_state['init'] = False
 
@@ -53,8 +89,10 @@ def main():
                 time.sleep(3)
                 st.rerun()
 
+            path = save_video(file)
+
             st.session_state['video'] = file
-            st.session_state['path'] = os.path.abspath(file)
+            st.session_state['path'] = path
             st.rerun()
 
     else:
@@ -65,15 +103,22 @@ def main():
             init_frames(file=st.session_state['video'], path=st.session_state['path'])
             st.session_state['init'] = True
 
-        mode_selection(file=st.session_state['video'], path=st.session_state['path'])
+        mode_selection(path=st.session_state['path'])
 
 
 def init_frames(file, path):
+    """
+    Initialize all essenstial for searching frames
+    
+    :param file: st.UploadedFile
+    :param path: string (path to file on tmp)
+    """
     
     db = get_database()
 
     frame = db.return_table(table_name="frames")
-    check = frame.search().where(f"video_name ='{file}'").limit(1).to_list()
+    #check if file is already in database if it is not then we use conversion 
+    check = frame.search().where(f"video_name ='{file.name}'").limit(1).to_list()
 
     if len(check)==0:
         with st.spinner("Conversion video to frames"):
@@ -83,10 +128,19 @@ def init_frames(file, path):
 
 def init_audio(file, path):
 
+    """
+    Initialize all essenstial for searching through audio
+    
+    :param file: st.UploadedFile
+    :param path: string (path to file on tmp)
+    """
+    
+
     db = get_database()
 
     audio = db.return_table(table_name="audio")
-    check = audio.search().where(f"video_name = '{file}'").limit(1).to_list()
+    #check if file is already in database if it is not then we use conversion 
+    check = audio.search().where(f"video_name = '{file.name}'").limit(1).to_list()
 
     if len(check) == 0:
         with st.spinner("Conversion video to transcript audio"):
@@ -106,11 +160,16 @@ def get_database():
 def get_conversion():
     return Conversion()
 
-@st.cache_resource(max_entries=1)   # jezeli uzytknowik zaladuje nowy film to stary jest wyrzucony z ramu
+@st.cache_resource(max_entries=1)   #if new file is loaded then the previous file is deleted from ram
 def get_audio_engine(path):
     return SearchAudio(file_dir=path)
 
-def mode_selection(file, path):
+def mode_selection(path):
+    """
+    Function for choosing mode and showing results
+    
+    :param path: str path to file 
+    """
 
     search_frame = get_search_engine()
     search_audio = get_audio_engine(path=path)
@@ -140,7 +199,7 @@ def mode_selection(file, path):
     elif mode_number == "2":
         found = search_audio.find(1, user_input)
         start_time = found['start_time']
-        end_time = found['end_time']
+        # end_time = found['end_time']
         st.video(data=path, start_time=start_time)
 
 
