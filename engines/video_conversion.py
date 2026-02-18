@@ -47,7 +47,7 @@ class Conversion():
                 self.frame_data.append({
                     "id": str(uuid.uuid4()),
                     "video_name": os.path.basename(video_path),
-                    "timestamp": count-1,
+                    "timestamp": count-2,
                     "vector": vector,
                     })
         

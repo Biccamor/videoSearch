@@ -50,7 +50,7 @@ def save_video(uploaded_file):
         os.mkdir(TEMP_DIR)
 
     for filename in os.listdir(TEMP_DIR):
-        filepath = os.path.join(TEMP_DIR, filename.name)
+        filepath = os.path.join(TEMP_DIR, filename)
         
         try:
             if filepath is not None:
@@ -134,7 +134,6 @@ def init_audio(file, path):
     :param file: st.UploadedFile
     :param path: string (path to file on tmp)
     """
-    
 
     db = get_database()
 
@@ -185,22 +184,23 @@ def mode_selection(path):
         st.session_state['init'] = None
         st.session_state['path'] = None
         st.rerun()
-                
-    user_input = st.text_input("Napisz czego szukasz dokladnie w filmie przesłanym przykładowe zapytanie: żeby wyjśc kliknij q: " )
 
-    if user_input.lower() == "q":
-        st.rerun()
+    ask_query = "Write what you are looking for in a video"
 
-    if mode_number == "1":
-        found = search_frame.find_photo(1, user_input)
-        timestamp = found['timestamp']
-        st.video(data=path, start_time=timestamp)
+    user_input = st.text_input(ask_query, "")
+    if user_input != "":
+        if user_input.lower() == "q":
+            st.rerun()
 
-    elif mode_number == "2":
-        found = search_audio.find(1, user_input)
-        start_time = found['start_time']
-        # end_time = found['end_time']
-        st.video(data=path, start_time=start_time)
+        if mode_number == "1":
+            found = search_frame.find_photo(1, user_input)
+            timestamp = found['timestamp']-1
+            st.video(data=path, start_time=timestamp)
+
+        elif mode_number == "2":
+            found = search_audio.find(1, user_input)
+            start_time = found['start_time']-1
+            st.video(data=path, start_time=start_time)
 
 
     # elif mode_number == "3":
