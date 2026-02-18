@@ -173,9 +173,15 @@ def mode_audio(path: str, user_input: str, search_audio):
     start_time = found['start_time']-1
     st.video(data=path, start_time=start_time)
 
-def both_modes(path: str, user_input: str, search_audiop, search_frame):
-    ...
+def both_modes(path: str, user_input: str, search_audio, search_frame):
+    
+    col1, col2 = st.columns(2)
 
+    with col1:
+        mode_text(path, user_input, search_frame)
+
+    with col2:
+        mode_audio(path,user_input, search_audio)
 
 
 def mode_selection(path: str):
@@ -213,14 +219,8 @@ def mode_selection(path: str):
         elif mode_number == "2":
             mode_audio(path=path, user_input=user_input, search_audio=search_audio)
 
-    # elif mode_number == "3":
-    #     found_frames = search_frame.find_photo(1, user_input)
-    #     timestamp = found['timestamp']
-
-    #     found_audio = search_audio.find(1, user_input)
-    #     start_time = found['start_time']
-    #     end_time = found['end_time']
-
+        elif mode_number == "3":
+            both_modes(path=path, user_input=user_input, search_audio=search_audio, search_frame=search_frame)
 
 if __name__=="__main__":
     main()

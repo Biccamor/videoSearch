@@ -58,10 +58,6 @@ class SearchEngine():
 
         self.accuracy = (1-100*similarity['_distance'])
 
-        if number_of_photos == 1:
-            return similarity[['timestamp']]
-        
-
         return similarity[['video_name', 'timestamp','_distance']]
     
     def acc(self):
