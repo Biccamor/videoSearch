@@ -2,26 +2,33 @@ from engines.model import SearchEngine
 from engines.video_conversion import  Conversion
 from engines.hearing_model import SearchAudio
 from database import Database
-
-
-#TODO:
-# streamlit
-# batching w video_conversion
-# czyszczenie modeli
-# dekompozycja convert_video_to_photos w video_conversion.py
+import filetype
 
 class App():
 
-    def __init__(self):
+    def __init__(self, file: str):
         self.conversion = Conversion() 
         self.search_frame = SearchEngine(device='cpu')
-        self.file = "familyguy.mp4"
+        self.file = file
 
         self.search_audio = SearchAudio(file_dir=self.file)
 
+    def check_file(self):
+        
+        bytes_data = self.file.read(2048)
+        check = filetype.guess(bytes_data)
+        self.file.seek(0)
+        if check is None:
+            return False
+        
+        if check.mime == 'video/mp4': 
+            return True
+
+        return False
+
+
     def get_file(self):
         
-        # self.file = input("Wpisz nazwe pliku wideo do wczytania: \n")
         db = Database()
         frame = db.return_table(table_name="frames")
 
@@ -39,14 +46,14 @@ class App():
 
         while True:
              print("------------------------------------------------------------------------------------\n")
-             print("W jakim trybie chcesz użyć wyszukiwarki? \n1. Szukanie po obrazach \n2. Szukanie po dźwięku " \
-                "\n3. Oba tryby \n4. Wyjście")
+             print("Choose mode \n1. Frame Searching \n2. Audio Searching " \
+                "\n3. Both Modes \n4. Exit")
              print("------------------------------------------------------------------------------------\n")
              mode = input("Wpisz numer trybu: \n")
              if mode == "4" or mode not in ["1", "2", "3"]:
                  break
              
-             user_input = input("Napisz czego szukasz dokladnie w filmie przesłanym przykładowe zapytanie: żeby wyjśc kliknij q: " )
+             user_input = input("What are you looking for in a video? to exit click q: " )
              
              if user_input.lower() == "q":
                  break
@@ -61,13 +68,18 @@ class App():
 
              elif mode == "3":
                 found_frames = self.search_frame.find_photo(3, user_input)
-                print("Wyniki wyszukiwania po obrazach: \n", found_frames)
+                print("Search for frames \n", found_frames)
 
                 found_audio = self.search_audio.find(3, user_input)
-                print("Wyniki wyszukiwania po dźwięku: \n", found_audio)
+                print("Search for sound \n", found_audio)
 
 
 if __name__ == "__main__":
+    file_name = input("Type name of your file .mp4 (first put in the folder)")
     app = App()
-    app.get_file()
-    app.run()
+
+    if app.check_file() == True:
+        app.get_file()
+        app.run()
+    else: 
+        raise "The File is not mp4"
